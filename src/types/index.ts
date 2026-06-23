@@ -17,7 +17,7 @@ export type MuscleGroup =
 
 export type Difficulty = 'Beginner' | 'Intermediate' | 'Advanced';
 
-export type WeekDay = 'Monday' | 'Tuesday' | 'Thursday' | 'Friday';
+export type WeekDay = 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday';
 
 /** A single exercise definition (lives in the exercise library). */
 export interface Exercise {

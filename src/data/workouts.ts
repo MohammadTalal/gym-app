@@ -1,11 +1,11 @@
 import type { WorkoutDay, WeekDay } from '../types';
 
 /**
- * Beginner 4-day split:
+ * Beginner 4-day split (Mon–Thu, legs at the end of the week):
  *   Mon  – Upper Body A
- *   Tue  – Lower Body A
- *   Thu  – Upper Body B
- *   Fri  – Lower Body B
+ *   Tue  – Upper Body B
+ *   Wed  – Lower Body A
+ *   Thu  – Lower Body B
  *
  * Each session: warm-up + 6 exercises, ~45–60 min, machines first.
  */
@@ -33,7 +33,7 @@ export const WORKOUTS: WorkoutDay[] = [
   },
   {
     id: 'lower-a',
-    day: 'Tuesday',
+    day: 'Wednesday',
     title: 'Lower Body A',
     focus: 'Quads · Hamstrings · Glutes · Calves · Core',
     duration: [45, 60],
@@ -54,7 +54,7 @@ export const WORKOUTS: WorkoutDay[] = [
   },
   {
     id: 'upper-b',
-    day: 'Thursday',
+    day: 'Tuesday',
     title: 'Upper Body B',
     focus: 'Chest · Back · Shoulders · Arms',
     duration: [45, 60],
@@ -75,7 +75,7 @@ export const WORKOUTS: WorkoutDay[] = [
   },
   {
     id: 'lower-b',
-    day: 'Friday',
+    day: 'Thursday',
     title: 'Lower Body B',
     focus: 'Legs · Glutes · Core',
     duration: [45, 60],
@@ -96,12 +96,10 @@ export const WORKOUTS: WorkoutDay[] = [
   },
 ];
 
-const DAY_TO_WORKOUT: Partial<Record<string, WorkoutDay>> = {
-  Monday: WORKOUTS[0],
-  Tuesday: WORKOUTS[1],
-  Thursday: WORKOUTS[2],
-  Friday: WORKOUTS[3],
-};
+// Built from each workout's `day` field so it stays correct if the order changes.
+const DAY_TO_WORKOUT: Partial<Record<string, WorkoutDay>> = Object.fromEntries(
+  WORKOUTS.map((w) => [w.day, w]),
+);
 
 /** Day name for a JS Date. */
 const WEEKDAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -127,4 +125,4 @@ export function getNextWorkout(date: Date): { workout: WorkoutDay; daysAway: num
 export const workoutById = (id: string): WorkoutDay | undefined =>
   WORKOUTS.find((w) => w.id === id);
 
-export const TRAINING_DAYS: WeekDay[] = ['Monday', 'Tuesday', 'Thursday', 'Friday'];
+export const TRAINING_DAYS: WeekDay[] = ['Monday', 'Tuesday', 'Wednesday', 'Thursday'];

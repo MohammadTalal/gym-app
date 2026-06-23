@@ -43,8 +43,8 @@ export const AR_DIFFICULTY: Record<Difficulty, string> = {
 export const AR_WEEKDAY: Record<WeekDay, string> = {
   Monday: 'الاثنين',
   Tuesday: 'الثلاثاء',
+  Wednesday: 'الأربعاء',
   Thursday: 'الخميس',
-  Friday: 'الجمعة',
 };
 
 export const AR_WORKOUTS: Record<string, { title: string; focus: string; warmup: string[] }> = {
