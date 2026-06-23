@@ -1,0 +1,50 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Tajawal:wght@400;500;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html {
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  @apply bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100;
+  /* Respect iOS safe areas (notch / home indicator) */
+  padding-bottom: env(safe-area-inset-bottom);
+  overscroll-behavior-y: none;
+}
+
+/* Hide scrollbars on horizontal scroll rows but keep functionality */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+@layer utilities {
+  /* Smooth scale feedback for tappable elements (paired with active:scale-*). */
+  .transition-active {
+    @apply transition-transform duration-100 ease-out;
+  }
+}
+
+@layer components {
+  .card {
+    @apply rounded-2xl bg-white dark:bg-slate-900 shadow-card dark:shadow-card-dark border border-slate-100 dark:border-slate-800;
+  }
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl font-semibold transition-active active:scale-[0.97] select-none;
+  }
+  .btn-primary {
+    @apply btn bg-brand-600 text-white hover:bg-brand-700 active:bg-brand-700;
+  }
+  .btn-ghost {
+    @apply btn bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200;
+  }
+  .chip {
+    @apply inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold;
+  }
+}
