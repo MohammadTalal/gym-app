@@ -1,10 +1,11 @@
 import { Link } from 'react-router-dom';
-import { ArrowRight, Calendar, Dumbbell, Flame, TrendingUp, Trophy } from 'lucide-react';
+import { ArrowRight, Calendar, Dumbbell, Flame, Sparkles, TrendingUp, Trophy } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { useI18n } from '../i18n/LanguageContext';
 import { PageHeader } from '../components/PageHeader';
 import { ProgressRing } from '../components/ProgressRing';
 import { getWorkoutForDate, getNextWorkout, workoutById, TRAINING_DAYS } from '../data/workouts';
+import { ACHIEVEMENTS } from '../data/achievements';
 import { dateKey, weekDates } from '../utils/date';
 
 function greetingKey(d: Date): string {
@@ -16,8 +17,9 @@ function greetingKey(d: Date): string {
 
 export function Dashboard() {
   const { state } = useApp();
-  const { t, workoutTitle, workoutFocus, prettyDate, dayLabel } = useI18n();
+  const { t, workoutTitle, workoutFocus, prettyDate, dayLabel, dailyTip } = useI18n();
   const today = new Date();
+  const earnedCount = ACHIEVEMENTS.filter((a) => a.earned(state)).length;
   const todaysWorkout = getWorkoutForDate(today);
   const next = getNextWorkout(today);
 
@@ -43,7 +45,13 @@ export function Dashboard() {
     <div>
       <PageHeader title={state.profile.name} subtitle={t(greetingKey(today))} />
 
-      <div className="space-y-4 p-4">
+      <div className="animate-fade-in space-y-4 p-4">
+        {/* Daily motivation */}
+        <p className="flex items-center gap-2 text-sm font-medium text-slate-500 dark:text-slate-400">
+          <Sparkles className="h-4 w-4 shrink-0 text-brand-500" />
+          {dailyTip}
+        </p>
+
         {/* Today's focus */}
         <Link to="/today" className="card block overflow-hidden">
           <div className="flex items-stretch">
@@ -72,7 +80,7 @@ export function Dashboard() {
               )}
             </div>
             <div className="flex w-28 shrink-0 items-center justify-center bg-gradient-to-br from-brand-500 to-brand-700 text-white">
-              <Dumbbell className="h-12 w-12 drop-shadow" strokeWidth={1.5} />
+              <Dumbbell className="h-12 w-12 animate-float drop-shadow" strokeWidth={1.5} />
             </div>
           </div>
         </Link>
@@ -131,6 +139,35 @@ export function Dashboard() {
             value={latestWeight ? `${latestWeight}` : '—'}
             label={t('dash.weightKg')}
           />
+        </div>
+
+        {/* Achievements */}
+        <div>
+          <div className="mb-2 flex items-center justify-between">
+            <h2 className="font-bold">{t('dash.achievements')}</h2>
+            <span className="text-xs font-semibold text-slate-400">
+              {t('ach.unlocked', { n: earnedCount, total: ACHIEVEMENTS.length })}
+            </span>
+          </div>
+          <div className="no-scrollbar -mx-4 flex gap-2.5 overflow-x-auto px-4 pb-1">
+            {ACHIEVEMENTS.map((a) => {
+              const earned = a.earned(state);
+              return (
+                <div
+                  key={a.id}
+                  title={t(`ach.${a.id}.desc`)}
+                  className={`flex w-24 shrink-0 flex-col items-center gap-1 rounded-2xl border p-3 text-center transition-active ${
+                    earned
+                      ? 'border-brand-200 bg-brand-50 dark:border-brand-500/30 dark:bg-brand-500/10'
+                      : 'border-slate-100 bg-slate-50 opacity-60 grayscale dark:border-slate-800 dark:bg-slate-900'
+                  }`}
+                >
+                  <span className={`text-3xl ${earned ? 'animate-pop' : ''}`}>{a.emoji}</span>
+                  <span className="text-[11px] font-bold leading-tight">{t(`ach.${a.id}.name`)}</span>
+                </div>
+              );
+            })}
+          </div>
         </div>
 
         {/* Recent activity */}

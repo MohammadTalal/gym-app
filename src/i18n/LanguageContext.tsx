@@ -2,7 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo } from 'reac
 import type { ReactNode } from 'react';
 import type { Difficulty, Exercise, MuscleGroup, WeekDay, WorkoutDay } from '../types';
 import { useLocalStorage } from '../hooks/useLocalStorage';
-import { DAY_LABELS, DAY_NAMES, MONTHS, STRINGS } from './ui';
+import { DAY_LABELS, DAY_NAMES, MONTHS, MOTIVATION, STRINGS } from './ui';
 import type { Lang } from './ui';
 import {
   AR_DIFFICULTY,
@@ -11,6 +11,7 @@ import {
   AR_MUSCLE,
   AR_WEEKDAY,
   AR_WORKOUTS,
+  EN_MUSCLE,
 } from './content';
 
 type Params = Record<string, string | number>;
@@ -38,6 +39,8 @@ interface I18nValue {
   shortDate: (input: string | Date) => string;
   prettyDate: (date: Date) => string;
   dayLabel: (date: Date) => string;
+  /** A motivational line that stays stable for the whole day. */
+  dailyTip: string;
 }
 
 const I18nContext = createContext<I18nValue | null>(null);
@@ -86,7 +89,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
       return { ...e, name: tr.name, description: tr.description, instructions: tr.instructions, mistakes: tr.mistakes };
     };
 
-    const muscle = (g: MuscleGroup) => (isAr ? AR_MUSCLE[g] ?? g : g);
+    const muscle = (g: MuscleGroup) => (isAr ? AR_MUSCLE[g] ?? g : EN_MUSCLE[g] ?? g);
     const equipment = (e: string) => (isAr ? AR_EQUIPMENT[e] ?? e : e);
     const difficulty = (d: Difficulty) => (isAr ? AR_DIFFICULTY[d] ?? d : d);
     const workoutTitle = (w: WorkoutDay) => (isAr ? AR_WORKOUTS[w.id]?.title ?? w.title : w.title);
@@ -117,6 +120,12 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
 
     const dayLabel = (date: Date) => DAY_LABELS[lang][date.getDay()];
 
+    // Stable per calendar day so it doesn't flicker on re-render.
+    const now = new Date();
+    const dayOfYear = Math.floor((now.getTime() - new Date(now.getFullYear(), 0, 0).getTime()) / 86_400_000);
+    const tips = MOTIVATION[lang];
+    const dailyTip = tips[dayOfYear % tips.length];
+
     return {
       lang,
       dir,
@@ -135,6 +144,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
       shortDate,
       prettyDate,
       dayLabel,
+      dailyTip,
     };
   }, [lang, dir, setLang, toggleLang, t]);
 

@@ -29,7 +29,7 @@ export function TodayWorkout() {
         subtitle={isRestDay ? t('today.upNext') : prettyDate(today)}
       />
 
-      <div className="space-y-4 p-4">
+      <div className="animate-fade-in space-y-4 p-4">
         {isRestDay && (
           <div className="card flex items-start gap-3 border-brand-100 bg-brand-50 p-4 dark:border-brand-500/20 dark:bg-brand-500/10">
             <Sparkles className="mt-0.5 h-5 w-5 shrink-0 text-brand-500" />

@@ -15,10 +15,13 @@ import { useApp } from '../context/AppContext';
 import { useI18n } from '../i18n/LanguageContext';
 import { ExerciseThumb } from '../components/ExerciseThumb';
 import { ProgressRing } from '../components/ProgressRing';
+import { Confetti } from '../components/Confetti';
 import { workoutById } from '../data/workouts';
 import { exerciseById } from '../data/exercises';
 import { MUSCLE_CHIP } from '../utils/muscleStyle';
 import { dateKey, formatRest } from '../utils/date';
+import { haptics } from '../utils/haptics';
+import { useCountUp } from '../hooks/useCountUp';
 
 export function WorkoutMode() {
   const { workoutId } = useParams<{ workoutId: string }>();
@@ -39,10 +42,16 @@ export function WorkoutMode() {
   const [finished, setFinished] = useState(false);
   const startedAt = useRef<number>(Date.now());
 
-  // Rest-timer countdown.
+  // Rest-timer countdown. Buzz when it naturally reaches zero.
   useEffect(() => {
     if (restLeft <= 0) return;
-    const t = setInterval(() => setRestLeft((s) => Math.max(0, s - 1)), 1000);
+    const t = setInterval(() => {
+      setRestLeft((s) => {
+        const next = Math.max(0, s - 1);
+        if (next === 0) haptics.restOver();
+        return next;
+      });
+    }, 1000);
     return () => clearInterval(t);
   }, [restLeft > 0]);
 
@@ -67,6 +76,7 @@ export function WorkoutMode() {
   const overallProgress = totalSets ? completedSets / totalSets : 0;
 
   function completeSet() {
+    haptics.setDone();
     setSetsDone((prev) => {
       const next = [...prev];
       if (next[current] < prescription.sets) next[current] += 1;
@@ -115,31 +125,20 @@ export function WorkoutMode() {
       completedExercises,
       totalExercises: workout!.exercises.length,
     });
+    haptics.celebrate();
     setFinished(true);
   }
 
   if (finished) {
     const completedExercises = workout.exercises.filter((e) => isExerciseComplete(e.exerciseId)).length;
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center gap-5 bg-gradient-to-b from-brand-500 to-brand-700 p-8 text-center text-white">
-        <PartyPopper className="h-16 w-16" />
-        <h1 className="text-3xl font-extrabold">{t('mode.completeTitle')}</h1>
-        <p className="text-brand-50">
-          {t('mode.completeMsg', {
-            done: completedExercises,
-            total: workout.exercises.length,
-            sets: completedSets,
-          })}
-        </p>
-        <div className="mt-2 flex w-full max-w-xs flex-col gap-3">
-          <button onClick={() => navigate('/progress')} className="btn w-full bg-white py-3 text-base text-brand-700">
-            {t('mode.viewProgress')}
-          </button>
-          <button onClick={() => navigate('/')} className="btn w-full bg-brand-400/40 py-3 text-base text-white">
-            {t('mode.backHome')}
-          </button>
-        </div>
-      </div>
+      <WorkoutComplete
+        completedExercises={completedExercises}
+        totalExercises={workout.exercises.length}
+        completedSets={completedSets}
+        onViewProgress={() => navigate('/progress')}
+        onHome={() => navigate('/')}
+      />
     );
   }
 
@@ -194,7 +193,7 @@ export function WorkoutMode() {
                 i < doneSets
                   ? 'border-brand-500 bg-brand-500 text-white'
                   : 'border-slate-300 text-slate-400 dark:border-slate-600'
-              }`}
+              } ${i === doneSets - 1 ? 'animate-pop' : ''}`}
             >
               {i < doneSets ? <Check className="h-5 w-5" strokeWidth={3} /> : i + 1}
             </div>
@@ -215,9 +214,12 @@ export function WorkoutMode() {
               <p className="flex items-center gap-1.5 text-sm font-semibold text-slate-500 dark:text-slate-400">
                 <Clock className="h-4 w-4" /> {t('mode.rest')}
               </p>
-              <ProgressRing progress={restTotal ? (restTotal - restLeft) / restTotal : 0} size={132} stroke={11}>
-                <span className="text-3xl font-extrabold tabular-nums">{formatRest(restLeft)}</span>
-              </ProgressRing>
+              <div className="animate-pulse-ring">
+                <ProgressRing progress={restTotal ? (restTotal - restLeft) / restTotal : 0} size={132} stroke={11}>
+                  <span className="text-3xl font-extrabold tabular-nums">{formatRest(restLeft)}</span>
+                </ProgressRing>
+              </div>
+              <p className="px-2 text-center text-xs text-slate-400">{i18n.dailyTip}</p>
               <div className="flex w-full gap-3">
                 <button onClick={() => setRestLeft((s) => s + 15)} className="btn-ghost flex-1 py-2.5">
                   <Plus className="h-4 w-4" /> {t('mode.add15')}
@@ -270,6 +272,58 @@ export function WorkoutMode() {
             ))}
           </ol>
         </details>
+      </div>
+    </div>
+  );
+}
+
+/** Celebratory finish screen: confetti + animated counters. */
+function WorkoutComplete({
+  completedExercises,
+  totalExercises,
+  completedSets,
+  onViewProgress,
+  onHome,
+}: {
+  completedExercises: number;
+  totalExercises: number;
+  completedSets: number;
+  onViewProgress: () => void;
+  onHome: () => void;
+}) {
+  const { t } = useI18n();
+  const exDone = Math.round(useCountUp(completedExercises));
+  const setsDone = Math.round(useCountUp(completedSets));
+
+  return (
+    <div className="relative flex min-h-screen flex-col items-center justify-center gap-5 overflow-hidden bg-gradient-to-b from-brand-500 to-brand-700 p-8 text-center text-white">
+      <Confetti />
+      <PartyPopper className="h-16 w-16 animate-float" />
+      <h1 className="animate-pop text-3xl font-extrabold">{t('mode.completeTitle')}</h1>
+
+      <div className="flex gap-4">
+        <div className="rounded-2xl bg-white/15 px-5 py-3">
+          <p className="text-3xl font-extrabold tabular-nums">
+            {exDone}
+            <span className="text-lg opacity-70">/{totalExercises}</span>
+          </p>
+          <p className="text-xs font-semibold uppercase tracking-wide opacity-80">{t('common.exercises')}</p>
+        </div>
+        <div className="rounded-2xl bg-white/15 px-5 py-3">
+          <p className="text-3xl font-extrabold tabular-nums">{setsDone}</p>
+          <p className="text-xs font-semibold uppercase tracking-wide opacity-80">{t('common.sets')}</p>
+        </div>
+      </div>
+
+      <p className="max-w-xs text-brand-50">{t('mode.completeMsg', { done: completedExercises, total: totalExercises, sets: completedSets })}</p>
+
+      <div className="mt-2 flex w-full max-w-xs flex-col gap-3">
+        <button onClick={onViewProgress} className="btn w-full bg-white py-3 text-base text-brand-700">
+          {t('mode.viewProgress')}
+        </button>
+        <button onClick={onHome} className="btn w-full bg-brand-400/40 py-3 text-base text-white">
+          {t('mode.backHome')}
+        </button>
       </div>
     </div>
   );

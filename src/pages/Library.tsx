@@ -8,6 +8,12 @@ import { EXERCISES } from '../data/exercises';
 import type { MuscleGroup } from '../types';
 import { DIFFICULTY_CHIP, MUSCLE_CHIP } from '../utils/muscleStyle';
 
+// Extra search keywords per muscle group so common synonyms find the right
+// exercises in either language (e.g. "abs"/"stomach"/"بطن" → Core).
+const SEARCH_SYNONYMS: Partial<Record<MuscleGroup, string>> = {
+  Core: 'abs stomach belly tummy core بطن معدة جذع',
+};
+
 // Muscle groups actually represented in the library, in display order.
 const FILTERS: (MuscleGroup | 'All')[] = [
   'All',
@@ -40,6 +46,7 @@ export function Library() {
         locExercise(e).name,
         muscle(e.muscleGroup),
         equipment(e.equipment),
+        SEARCH_SYNONYMS[e.muscleGroup] ?? '',
       ]
         .join(' ')
         .toLowerCase();
@@ -52,7 +59,7 @@ export function Library() {
     <div>
       <PageHeader title={t('lib.title')} subtitle={t('lib.movements', { n: EXERCISES.length })} />
 
-      <div className="space-y-4 p-4">
+      <div className="animate-fade-in space-y-4 p-4">
         {/* Search */}
         <div className="relative">
           <Search className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />

@@ -17,6 +17,7 @@ import { PageHeader } from '../components/PageHeader';
 import { ProfileCard } from '../components/ProfileCard';
 import { exerciseById } from '../data/exercises';
 import { dateKey, startOfWeek } from '../utils/date';
+import { weekStreak } from '../utils/stats';
 import { TRAINING_DAYS } from '../data/workouts';
 
 export function Progress() {
@@ -58,7 +59,7 @@ export function Progress() {
     const first = state.bodyWeight[0]?.weightKg;
     const last = state.bodyWeight.at(-1)?.weightKg;
     const weightDelta = first != null && last != null ? last - first : 0;
-    const streak = computeStreak(state.completedWorkouts.map((w) => w.date));
+    const streak = weekStreak(state.completedWorkouts.map((w) => w.date));
     return { total, totalMinutes, weightDelta, streak };
   }, [state.completedWorkouts, state.bodyWeight]);
 
@@ -74,7 +75,7 @@ export function Progress() {
     <div>
       <PageHeader title={t('prog.title')} subtitle={t('prog.subtitle')} />
 
-      <div className="space-y-4 p-4">
+      <div className="animate-fade-in space-y-4 p-4">
         {/* Profile */}
         <ProfileCard />
 
@@ -214,19 +215,4 @@ function StatCard({ icon, value, label }: { icon: React.ReactNode; value: React.
       </div>
     </div>
   );
-}
-
-/** Counts consecutive weeks (ending this week or last) that have ≥1 workout. */
-function computeStreak(dates: string[]): number {
-  if (dates.length === 0) return 0;
-  const weeks = new Set(dates.map((d) => dateKey(startOfWeek(new Date(d)))));
-  let streak = 0;
-  const cursor = startOfWeek(new Date());
-  // Allow the streak to be "alive" even if this week has no workout yet.
-  if (!weeks.has(dateKey(cursor))) cursor.setDate(cursor.getDate() - 7);
-  while (weeks.has(dateKey(cursor))) {
-    streak++;
-    cursor.setDate(cursor.getDate() - 7);
-  }
-  return streak;
 }

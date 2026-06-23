@@ -502,6 +502,40 @@ export const EXERCISES: Exercise[] = [
     mistakes: ['Letting the lower back arch off the floor.', 'Moving too fast.'],
     videoId: '4XLEnwUr1d8',
   },
+  {
+    id: 'bicycle-crunch',
+    name: 'Bicycle Crunch',
+    muscleGroup: 'Core',
+    equipment: 'Bodyweight',
+    difficulty: 'Beginner',
+    description:
+      'A dynamic ab exercise that works the front abs and the obliques (side abs) by alternating from side to side.',
+    instructions: [
+      'Lie on your back with your hands resting lightly behind your head.',
+      'Lift your shoulders off the floor and bring your knees up.',
+      'Rotate to bring one elbow toward the opposite knee while straightening the other leg.',
+      'Alternate sides in a smooth, controlled pedalling motion.',
+    ],
+    mistakes: ['Pulling on your neck with your hands.', 'Rushing instead of controlling each rotation.'],
+    videoId: '9FGilxCbdz8',
+  },
+  {
+    id: 'lying-leg-raise',
+    name: 'Lying Leg Raise',
+    muscleGroup: 'Core',
+    equipment: 'Bodyweight',
+    difficulty: 'Beginner',
+    description:
+      'Targets the lower abs by raising your legs while lying flat — a floor-based alternative to the hanging knee raise.',
+    instructions: [
+      'Lie flat on your back, legs straight, hands by your sides or tucked under your hips.',
+      'Press your lower back gently into the floor.',
+      'Raise your legs to about 90°, keeping them fairly straight.',
+      'Lower them slowly without letting your back arch off the floor.',
+    ],
+    mistakes: ['Letting the lower back arch up off the floor.', 'Dropping the legs down too fast.'],
+    videoId: 'JB2oyawG9KI',
+  },
 ];
 
 /** Quick lookup helper. */

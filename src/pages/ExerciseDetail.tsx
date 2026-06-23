@@ -71,7 +71,7 @@ export function ExerciseDetail() {
         </button>
       </div>
 
-      <div className="space-y-5 p-4">
+      <div className="animate-fade-in space-y-5 p-4">
         <div>
           <h1 className="text-2xl font-extrabold leading-tight">{exercise.name}</h1>
           <div className="mt-2 flex flex-wrap gap-1.5">

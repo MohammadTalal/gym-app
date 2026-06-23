@@ -213,6 +213,46 @@ export const STRINGS: Record<string, Record<Lang, string>> = {
   },
   'card.markDone': { en: 'Mark as done', ar: 'وضع علامة مكتمل' },
   'card.markNotDone': { en: 'Mark as not done', ar: 'إلغاء علامة الاكتمال' },
+
+  // ── Achievements ───────────────────────────────────
+  'dash.achievements': { en: 'Achievements', ar: 'الإنجازات' },
+  'ach.unlocked': { en: '{n}/{total} unlocked', ar: '{n}/{total} مفتوحة' },
+  'ach.first_workout.name': { en: 'First Workout', ar: 'أول تمرين' },
+  'ach.first_workout.desc': { en: 'Log your first session', ar: 'سجّل أول حصة لك' },
+  'ach.full_session.name': { en: 'Finisher', ar: 'مُنجِز' },
+  'ach.full_session.desc': { en: 'Complete every exercise in a session', ar: 'أكمل كل تمارين الحصة' },
+  'ach.first_pr.name': { en: 'Record Breaker', ar: 'محطّم الأرقام' },
+  'ach.first_pr.desc': { en: 'Log your first personal record', ar: 'سجّل أول رقم قياسي' },
+  'ach.perfect_week.name': { en: 'Perfect Week', ar: 'أسبوع مثالي' },
+  'ach.perfect_week.desc': { en: 'Hit all 4 sessions in one week', ar: 'أنجز الحصص الأربع في أسبوع' },
+  'ach.five_workouts.name': { en: 'Getting Consistent', ar: 'تبني الاستمرارية' },
+  'ach.five_workouts.desc': { en: 'Complete 5 workouts', ar: 'أكمل 5 تمارين' },
+  'ach.streak_2.name': { en: 'On Fire', ar: 'مشتعل' },
+  'ach.streak_2.desc': { en: 'Train 2 weeks in a row', ar: 'تمرّن أسبوعين متتاليين' },
+  'ach.ten_workouts.name': { en: 'Committed', ar: 'ملتزم' },
+  'ach.ten_workouts.desc': { en: 'Complete 10 workouts', ar: 'أكمل 10 تمارين' },
+  'ach.weigh_in.name': { en: 'Tracker', ar: 'متتبِّع' },
+  'ach.weigh_in.desc': { en: 'Log your weight 3 times', ar: 'سجّل وزنك 3 مرات' },
+};
+
+/** Rotating motivational lines, picked deterministically per day. */
+export const MOTIVATION: Record<Lang, string[]> = {
+  en: [
+    'Small steps every day add up to big results.',
+    "You don't have to be extreme, just consistent.",
+    'The only bad workout is the one that didn’t happen.',
+    'Show up for yourself today.',
+    'Progress, not perfection.',
+    'Strong is built one rep at a time.',
+  ],
+  ar: [
+    'خطوات صغيرة كل يوم تصنع نتائج كبيرة.',
+    'لا تحتاج أن تكون مثاليًا، فقط مستمرًا.',
+    'التمرين الوحيد السيئ هو الذي لم يحدث.',
+    'احضر من أجل نفسك اليوم.',
+    'تقدّم، لا كمال.',
+    'القوة تُبنى تكرارًا تلو الآخر.',
+  ],
 };
 
 /** Short weekday labels for the dashboard week strip, indexed by Date.getDay(). */
