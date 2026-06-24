@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { useI18n } from '../i18n/LanguageContext';
+import { useUnits } from '../context/UnitsContext';
 import { ExerciseThumb } from '../components/ExerciseThumb';
 import { ProgressRing } from '../components/ProgressRing';
 import { Confetti } from '../components/Confetti';
@@ -28,9 +29,11 @@ import { useLocalStorage } from '../hooks/useLocalStorage';
 export function WorkoutMode() {
   const { workoutId } = useParams<{ workoutId: string }>();
   const navigate = useNavigate();
-  const { toggleExerciseComplete, isExerciseComplete, logWorkout } = useApp();
+  const { state, toggleExerciseComplete, isExerciseComplete, logWorkout, addPersonalRecord } = useApp();
   const i18n = useI18n();
   const { t, muscle, reps: locReps } = i18n;
+  const { unit, fmt, fromDisplay } = useUnits();
+  const unitLabel = t(unit === 'kg' ? 'common.kg' : 'common.lb');
   const [soundOn] = useLocalStorage<boolean>(SOUND_KEY, true);
   const soundRef = useRef(soundOn);
   soundRef.current = soundOn;
@@ -46,6 +49,11 @@ export function WorkoutMode() {
   const [restTotal, setRestTotal] = useState(0);
   const [finished, setFinished] = useState(false);
   const startedAt = useRef<number>(Date.now());
+
+  // Optional weight/reps the user enters per exercise (drives auto-PRs).
+  const [weights, setWeights] = useState<string[]>(() => (workout ? workout.exercises.map(() => '') : []));
+  const [repsLog, setRepsLog] = useState<string[]>(() => (workout ? workout.exercises.map(() => '') : []));
+  const [prHit, setPrHit] = useState(false);
 
   // Rest-timer countdown. Buzz when it naturally reaches zero.
   useEffect(() => {
@@ -76,6 +84,8 @@ export function WorkoutMode() {
 
   const prescription = workout.exercises[current];
   const exercise = i18n.exercise(exerciseById(prescription.exerciseId)!);
+  const existingPr = state.personalRecords.find((p) => p.exerciseId === prescription.exerciseId);
+  const prWeightPlaceholder = existingPr ? fmt(existingPr.weightKg) : '—';
   const doneSets = setsDone[current];
   const allSetsDone = doneSets >= prescription.sets;
 
@@ -83,8 +93,26 @@ export function WorkoutMode() {
   const completedSets = setsDone.reduce((sum, n) => sum + n, 0);
   const overallProgress = totalSets ? completedSets / totalSets : 0;
 
+  // If the entered weight beats the stored PR for this exercise, record it.
+  function checkPersonalRecord() {
+    const enteredWeight = parseFloat(weights[current]);
+    const enteredReps = parseInt(repsLog[current], 10);
+    if (!Number.isFinite(enteredWeight) || enteredWeight <= 0 || !Number.isFinite(enteredReps) || enteredReps <= 0) {
+      return;
+    }
+    const kg = Math.round(fromDisplay(enteredWeight) * 10) / 10;
+    const existing = state.personalRecords.find((p) => p.exerciseId === prescription.exerciseId);
+    if (!existing || kg > existing.weightKg) {
+      addPersonalRecord({ exerciseId: prescription.exerciseId, weightKg: kg, reps: enteredReps, date: dateKey(new Date()) });
+      setPrHit(true);
+      haptics.celebrate();
+      setTimeout(() => setPrHit(false), 2500);
+    }
+  }
+
   function completeSet() {
     haptics.setDone();
+    checkPersonalRecord();
     setSetsDone((prev) => {
       const next = [...prev];
       if (next[current] < prescription.sets) next[current] += 1;
@@ -191,6 +219,51 @@ export function WorkoutMode() {
             })}
           </p>
         </div>
+
+        {/* Optional weight + reps entry (drives auto-PRs) */}
+        <div className="mt-4 flex items-end gap-2">
+          <label className="flex-1">
+            <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+              {t('mode.weight')} ({unitLabel})
+            </span>
+            <input
+              type="number"
+              inputMode="decimal"
+              value={weights[current]}
+              onChange={(e) =>
+                setWeights((w) => {
+                  const next = [...w];
+                  next[current] = e.target.value;
+                  return next;
+                })
+              }
+              placeholder={prWeightPlaceholder}
+              className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-center text-lg font-bold outline-none focus:border-brand-400 dark:border-slate-700 dark:bg-slate-900"
+            />
+          </label>
+          <label className="flex-1">
+            <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+              {t('common.reps')}
+            </span>
+            <input
+              type="number"
+              inputMode="numeric"
+              value={repsLog[current]}
+              onChange={(e) =>
+                setRepsLog((r) => {
+                  const next = [...r];
+                  next[current] = e.target.value;
+                  return next;
+                })
+              }
+              placeholder={locReps(prescription.reps)}
+              className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-center text-lg font-bold outline-none focus:border-brand-400 dark:border-slate-700 dark:bg-slate-900"
+            />
+          </label>
+        </div>
+        {prHit && (
+          <p className="mt-2 animate-pop text-center text-sm font-bold text-amber-500">🏆 {t('mode.newPr')}</p>
+        )}
 
         {/* Set tracker dots */}
         <div className="mt-5 flex items-center justify-center gap-2.5">

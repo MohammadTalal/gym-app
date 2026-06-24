@@ -99,6 +99,8 @@ export const STRINGS: Record<string, Record<Lang, string>> = {
   'mode.finish': { en: 'Finish', ar: 'إنهاء' },
   'mode.howTo': { en: 'How to do it', ar: 'طريقة الأداء' },
   'mode.undoSet': { en: 'undo a set', ar: 'تراجع عن مجموعة' },
+  'mode.weight': { en: 'Weight', ar: 'الوزن' },
+  'mode.newPr': { en: 'New personal record!', ar: 'رقم قياسي جديد!' },
   'mode.target': {
     en: 'Target: {sets} sets × {reps} reps · {rest} rest',
     ar: 'الهدف: {sets} مجموعات × {reps} تكرار · راحة {rest}',
