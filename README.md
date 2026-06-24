@@ -61,3 +61,6 @@ saved to your account.
 - **Personal records** — set a record on any exercise's detail page.
 - **Workouts** — logged automatically when you finish a session in Workout Mode.
 - **Reset** — "Reset all progress" on the Progress tab clears history (keeps your profile).
+- **Backfill past days** (cloud mode) — to log a day you trained but didn't tick
+  off in the app, edit and run [`supabase/backfill-days.sql`](supabase/backfill-days.sql)
+  in the Supabase SQL Editor.
