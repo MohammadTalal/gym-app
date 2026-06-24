@@ -187,6 +187,56 @@ export function CloudAppProvider({ children }: { children: ReactNode }) {
     [userId],
   );
 
+  const setDayCompletion = useCallback(
+    (exerciseIds: string[], complete: boolean, date: Date = new Date()) => {
+      const cur = stateRef.current;
+      if (!cur) return;
+      const key = dateKey(date);
+      const current = cur.completionByDate[key] ?? [];
+      const next = complete
+        ? Array.from(new Set([...current, ...exerciseIds]))
+        : current.filter((id) => !exerciseIds.includes(id));
+      const completionByDate = { ...cur.completionByDate, [key]: next };
+      const completedWorkouts = syncDayLog(cur.completedWorkouts, completionByDate, key);
+
+      setState((s) => (s ? { ...s, completionByDate, completedWorkouts } : s));
+
+      // Persist the exercise ticks in bulk.
+      if (complete) {
+        void supabase!
+          .from('exercise_completions')
+          .upsert(
+            exerciseIds.map((id) => ({ user_id: userId, date: key, exercise_id: id })),
+            { onConflict: 'user_id,date,exercise_id' },
+          );
+      } else {
+        void supabase!
+          .from('exercise_completions')
+          .delete()
+          .eq('user_id', userId)
+          .eq('date', key)
+          .in('exercise_id', exerciseIds);
+      }
+
+      // Persist the day's trained log.
+      const workout = scheduledWorkoutForKey(key);
+      if (workout) {
+        const entry = completedWorkouts.find((w) => w.date === key && w.workoutDayId === workout.id);
+        if (entry) {
+          void supabase!
+            .from('completed_workouts')
+            .upsert(workoutRow(userId, entry), { onConflict: 'user_id,workout_day_id,date' });
+        } else {
+          void supabase!
+            .from('completed_workouts')
+            .delete()
+            .match({ user_id: userId, date: key, workout_day_id: workout.id });
+        }
+      }
+    },
+    [userId],
+  );
+
   const logWorkout = useCallback(
     (entry: Omit<CompletedWorkout, 'id'>) => {
       setState((s) => {
@@ -288,6 +338,7 @@ export function CloudAppProvider({ children }: { children: ReactNode }) {
       mode: 'cloud',
       toggleDarkMode,
       toggleExerciseComplete,
+      setDayCompletion,
       isExerciseComplete,
       completedExerciseIds,
       logWorkout,
@@ -301,6 +352,7 @@ export function CloudAppProvider({ children }: { children: ReactNode }) {
     state,
     toggleDarkMode,
     toggleExerciseComplete,
+    setDayCompletion,
     isExerciseComplete,
     completedExerciseIds,
     logWorkout,

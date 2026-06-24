@@ -67,6 +67,22 @@ export function LocalAppProvider({ children }: { children: ReactNode }) {
     [setState],
   );
 
+  const setDayCompletion = useCallback(
+    (exerciseIds: string[], complete: boolean, date: Date = new Date()) => {
+      const key = dateKey(date);
+      setState((s) => {
+        const current = s.completionByDate[key] ?? [];
+        const next = complete
+          ? Array.from(new Set([...current, ...exerciseIds]))
+          : current.filter((id) => !exerciseIds.includes(id));
+        const completionByDate = { ...s.completionByDate, [key]: next };
+        const completedWorkouts = syncDayLog(s.completedWorkouts, completionByDate, key);
+        return { ...s, completionByDate, completedWorkouts };
+      });
+    },
+    [setState],
+  );
+
   const logWorkout = useCallback(
     (entry: Omit<CompletedWorkout, 'id'>) => {
       setState((s) => {
@@ -114,6 +130,7 @@ export function LocalAppProvider({ children }: { children: ReactNode }) {
       mode: 'local',
       toggleDarkMode,
       toggleExerciseComplete,
+      setDayCompletion,
       isExerciseComplete,
       completedExerciseIds,
       logWorkout,
@@ -126,6 +143,7 @@ export function LocalAppProvider({ children }: { children: ReactNode }) {
       state,
       toggleDarkMode,
       toggleExerciseComplete,
+      setDayCompletion,
       isExerciseComplete,
       completedExerciseIds,
       logWorkout,

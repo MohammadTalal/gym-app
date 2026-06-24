@@ -9,7 +9,7 @@ import { getWorkoutForDate, getNextWorkout } from '../data/workouts';
 import { exerciseById } from '../data/exercises';
 
 export function TodayWorkout() {
-  const { isExerciseComplete, toggleExerciseComplete } = useApp();
+  const { isExerciseComplete, toggleExerciseComplete, setDayCompletion } = useApp();
   const { t, workoutTitle, workoutFocus, workoutWarmup, weekday, prettyDate } = useI18n();
   const today = new Date();
 
@@ -21,6 +21,8 @@ export function TodayWorkout() {
   const total = workout.exercises.length;
   const doneCount = workout.exercises.filter((e) => isExerciseComplete(e.exerciseId)).length;
   const progress = total ? doneCount / total : 0;
+  const allDone = total > 0 && doneCount === total;
+  const allIds = workout.exercises.map((e) => e.exerciseId);
 
   return (
     <div>
@@ -65,6 +67,20 @@ export function TodayWorkout() {
             </div>
           </div>
         </div>
+
+        {!isRestDay && (
+          <button
+            onClick={() => setDayCompletion(allIds, !allDone)}
+            className={
+              allDone
+                ? 'btn w-full bg-green-100 py-3 text-sm font-bold text-green-700 dark:bg-green-500/15 dark:text-green-300'
+                : 'btn-primary w-full py-3'
+            }
+          >
+            <CheckCircle2 className="h-5 w-5" />
+            {allDone ? t('today.doneUndo') : t('today.markDone')}
+          </button>
+        )}
 
         {!isRestDay && doneCount === 0 && (
           <p className="px-1 text-xs text-slate-400">{t('today.loggedHint')}</p>

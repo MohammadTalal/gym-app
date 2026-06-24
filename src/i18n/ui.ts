@@ -74,6 +74,8 @@ export const STRINGS: Record<string, Record<Lang, string>> = {
     en: 'Tick off your exercises and the day counts as trained — no need to open Workout Mode.',
     ar: 'علّم تمارينك ويُحتسب اليوم كيوم تدريب — دون الحاجة لفتح وضع التمرين.',
   },
+  'today.markDone': { en: 'Mark workout as done', ar: 'اعتبر التمرين مكتملًا' },
+  'today.doneUndo': { en: 'Workout done — tap to undo', ar: 'اكتمل التمرين — اضغط للتراجع' },
 
   // ── Workout mode ───────────────────────────────────
   'mode.notFound': { en: 'Workout not found.', ar: 'التمرين غير موجود.' },

@@ -14,6 +14,8 @@ export interface AppContextValue {
   toggleDarkMode: () => void;
   /** Toggle a single exercise's completed state for a given date (default today). */
   toggleExerciseComplete: (exerciseId: string, date?: Date) => void;
+  /** Mark a set of exercises complete/incomplete at once (e.g. whole session). */
+  setDayCompletion: (exerciseIds: string[], complete: boolean, date?: Date) => void;
   isExerciseComplete: (exerciseId: string, date?: Date) => boolean;
   completedExerciseIds: (date?: Date) => string[];
   /** Save a finished workout into history. */
