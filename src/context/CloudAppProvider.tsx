@@ -12,8 +12,21 @@ import { supabase } from '../lib/supabase';
 import { useAuth } from './AuthContext';
 import { DEFAULT_PROFILE, STARTING_WEIGHT_KG } from '../data/sampleData';
 import { dateKey } from '../utils/date';
+import { reconcileLogs, scheduledWorkoutForKey, syncDayLog } from '../utils/session';
 import { AppContext } from './AppContext';
 import type { AppContextValue } from './AppContext';
+
+/** Map a CompletedWorkout to its Supabase row shape. */
+function workoutRow(userId: string, w: CompletedWorkout) {
+  return {
+    user_id: userId,
+    workout_day_id: w.workoutDayId,
+    date: w.date,
+    duration_minutes: w.durationMinutes,
+    completed_exercises: w.completedExercises,
+    total_exercises: w.totalExercises,
+  };
+}
 
 /** Supabase-backed data provider: loads the signed-in user's data and syncs writes. */
 export function CloudAppProvider({ children }: { children: ReactNode }) {
@@ -59,7 +72,7 @@ export function CloudAppProvider({ children }: { children: ReactNode }) {
       }
 
       if (cancelled) return;
-      setState({
+      const loaded: AppState = {
         profile: {
           name: profileRow.name,
           sex: profileRow.sex,
@@ -84,7 +97,21 @@ export function CloudAppProvider({ children }: { children: ReactNode }) {
           reps: p.reps,
           date: p.date,
         })),
-      });
+      };
+
+      // Backfill: past days with ticked exercises that were never logged become
+      // trained sessions. Persist any newly-created ones to Supabase.
+      const reconciled = reconcileLogs(loaded);
+      const loadedIds = new Set(loaded.completedWorkouts.map((w) => w.id));
+      const newLogs = reconciled.filter((w) => !loadedIds.has(w.id));
+      if (newLogs.length) {
+        await sb
+          .from('completed_workouts')
+          .upsert(newLogs.map((w) => workoutRow(userId, w)), { onConflict: 'user_id,workout_day_id,date' });
+      }
+
+      if (cancelled) return;
+      setState({ ...loaded, completedWorkouts: reconciled });
     })();
     return () => {
       cancelled = true;
@@ -116,16 +143,20 @@ export function CloudAppProvider({ children }: { children: ReactNode }) {
 
   const toggleExerciseComplete = useCallback(
     (exerciseId: string, date: Date = new Date()) => {
+      const cur = stateRef.current;
+      if (!cur) return;
       const key = dateKey(date);
-      const currentlyDone = (stateRef.current?.completionByDate[key] ?? []).includes(exerciseId);
-      setState((s) => {
-        if (!s) return s;
-        const current = s.completionByDate[key] ?? [];
-        const next = currentlyDone
-          ? current.filter((id) => id !== exerciseId)
-          : [...current, exerciseId];
-        return { ...s, completionByDate: { ...s.completionByDate, [key]: next } };
-      });
+      const currentList = cur.completionByDate[key] ?? [];
+      const currentlyDone = currentList.includes(exerciseId);
+      const nextList = currentlyDone
+        ? currentList.filter((id) => id !== exerciseId)
+        : [...currentList, exerciseId];
+      const completionByDate = { ...cur.completionByDate, [key]: nextList };
+      const completedWorkouts = syncDayLog(cur.completedWorkouts, completionByDate, key);
+
+      setState((s) => (s ? { ...s, completionByDate, completedWorkouts } : s));
+
+      // Persist the exercise tick.
       if (currentlyDone) {
         void supabase!
           .from('exercise_completions')
@@ -135,6 +166,22 @@ export function CloudAppProvider({ children }: { children: ReactNode }) {
         void supabase!
           .from('exercise_completions')
           .insert({ user_id: userId, date: key, exercise_id: exerciseId });
+      }
+
+      // Persist the auto-derived "trained" log for that day.
+      const workout = scheduledWorkoutForKey(key);
+      if (workout) {
+        const entry = completedWorkouts.find((w) => w.date === key && w.workoutDayId === workout.id);
+        if (entry) {
+          void supabase!
+            .from('completed_workouts')
+            .upsert(workoutRow(userId, entry), { onConflict: 'user_id,workout_day_id,date' });
+        } else {
+          void supabase!
+            .from('completed_workouts')
+            .delete()
+            .match({ user_id: userId, date: key, workout_day_id: workout.id });
+        }
       }
     },
     [userId],

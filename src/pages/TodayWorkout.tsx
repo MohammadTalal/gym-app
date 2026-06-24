@@ -57,9 +57,18 @@ export function TodayWorkout() {
               <span className="chip bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
                 <CheckCircle2 className="h-3 w-3" /> {doneCount}/{total} {t('today.complete')}
               </span>
+              {!isRestDay && doneCount > 0 && (
+                <span className="chip animate-pop bg-green-100 font-bold text-green-700 dark:bg-green-500/15 dark:text-green-300">
+                  <CheckCircle2 className="h-3 w-3" /> {t('today.logged')}
+                </span>
+              )}
             </div>
           </div>
         </div>
+
+        {!isRestDay && doneCount === 0 && (
+          <p className="px-1 text-xs text-slate-400">{t('today.loggedHint')}</p>
+        )}
 
         {/* Warm-up */}
         <div className="card p-4">

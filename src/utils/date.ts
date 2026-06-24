@@ -6,6 +6,12 @@ export function dateKey(date: Date = new Date()): string {
   return `${y}-${m}-${d}`;
 }
 
+/** Parse a yyyy-mm-dd key back into a local-time Date (avoids UTC day shifts). */
+export function parseDateKey(key: string): Date {
+  const [y, m, d] = key.split('-').map(Number);
+  return new Date(y, (m ?? 1) - 1, d ?? 1);
+}
+
 const FULL_DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 

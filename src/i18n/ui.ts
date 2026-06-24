@@ -69,6 +69,11 @@ export const STRINGS: Record<string, Record<Lang, string>> = {
   'today.start': { en: 'Start Workout', ar: 'ابدأ التمرين' },
   'today.resume': { en: 'Resume Workout', ar: 'متابعة التمرين' },
   'today.complete': { en: 'complete', ar: 'مكتمل' },
+  'today.logged': { en: 'Day logged', ar: 'تم تسجيل اليوم' },
+  'today.loggedHint': {
+    en: 'Tick off your exercises and the day counts as trained — no need to open Workout Mode.',
+    ar: 'علّم تمارينك ويُحتسب اليوم كيوم تدريب — دون الحاجة لفتح وضع التمرين.',
+  },
 
   // ── Workout mode ───────────────────────────────────
   'mode.notFound': { en: 'Workout not found.', ar: 'التمرين غير موجود.' },

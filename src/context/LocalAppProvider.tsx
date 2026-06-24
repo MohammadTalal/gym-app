@@ -10,6 +10,7 @@ import type {
 import { createInitialState } from '../data/sampleData';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { dateKey } from '../utils/date';
+import { reconcileLogs, syncDayLog } from '../utils/session';
 import { AppContext } from './AppContext';
 import type { AppContextValue } from './AppContext';
 
@@ -26,6 +27,12 @@ export function LocalAppProvider({ children }: { children: ReactNode }) {
     if (state.darkMode) root.classList.add('dark');
     else root.classList.remove('dark');
   }, [state.darkMode]);
+
+  // Backfill once on mount: any past day with ticked exercises becomes a
+  // logged ("trained") session, even if Workout Mode was never finished.
+  useEffect(() => {
+    setState((s) => ({ ...s, completedWorkouts: reconcileLogs(s) }));
+  }, [setState]);
 
   const toggleDarkMode = useCallback(
     () => setState((s) => ({ ...s, darkMode: !s.darkMode })),
@@ -51,7 +58,10 @@ export function LocalAppProvider({ children }: { children: ReactNode }) {
         const next = current.includes(exerciseId)
           ? current.filter((id) => id !== exerciseId)
           : [...current, exerciseId];
-        return { ...s, completionByDate: { ...s.completionByDate, [key]: next } };
+        const completionByDate = { ...s.completionByDate, [key]: next };
+        // Ticking exercises marks the day as trained automatically.
+        const completedWorkouts = syncDayLog(s.completedWorkouts, completionByDate, key);
+        return { ...s, completionByDate, completedWorkouts };
       });
     },
     [setState],
