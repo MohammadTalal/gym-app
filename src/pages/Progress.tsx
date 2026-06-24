@@ -17,6 +17,7 @@ import { useUnits } from '../context/UnitsContext';
 import { PageHeader } from '../components/PageHeader';
 import { ProfileCard } from '../components/ProfileCard';
 import { PastDayLogger } from '../components/PastDayLogger';
+import { ConsistencyHeatmap } from '../components/ConsistencyHeatmap';
 import { exerciseById } from '../data/exercises';
 import { dateKey, parseDateKey, startOfWeek } from '../utils/date';
 import { weekStreak } from '../utils/stats';
@@ -119,6 +120,9 @@ export function Progress() {
           </div>
           <p className="mt-1 text-center text-xs text-slate-400">{t('prog.goalPerWeek', { n: TRAINING_DAYS.length })}</p>
         </div>
+
+        {/* Consistency heatmap */}
+        <ConsistencyHeatmap />
 
         {/* Body weight */}
         <div className="card p-4">

@@ -121,6 +121,7 @@ export const STRINGS: Record<string, Record<Lang, string>> = {
   'prog.totalMinutes': { en: 'Total minutes', ar: 'إجمالي الدقائق' },
   'prog.weightChange': { en: 'Weight change', ar: 'تغيّر الوزن' },
   'prog.workoutsPerWeek': { en: 'Workouts per week', ar: 'التمارين أسبوعيًا' },
+  'prog.consistency': { en: 'Consistency (last 12 weeks)', ar: 'الانتظام (آخر 12 أسبوعًا)' },
   'prog.goalPerWeek': { en: 'Goal: {n} per week', ar: 'الهدف: {n} أسبوعيًا' },
   'prog.bodyWeight': { en: 'Body weight', ar: 'وزن الجسم' },
   'prog.logWeightHint': {
