@@ -21,8 +21,10 @@ export const STRINGS: Record<string, Record<Lang, string>> = {
   'common.tomorrow': { en: 'tomorrow', ar: 'غدًا' },
   'common.inDays': { en: 'in {n} days', ar: 'بعد {n} أيام' },
   'common.kg': { en: 'kg', ar: 'كجم' },
+  'common.lb': { en: 'lb', ar: 'رطل' },
   'common.reps': { en: 'reps', ar: 'تكرار' },
   'common.sets': { en: 'sets', ar: 'مجموعات' },
+  'common.delete': { en: 'Delete', ar: 'حذف' },
 
   // ── Theme / language toggles ───────────────────────
   'toggle.theme': { en: 'Toggle dark mode', ar: 'تبديل الوضع الداكن' },
@@ -59,7 +61,7 @@ export const STRINGS: Record<string, Record<Lang, string>> = {
   },
   'dash.totalWorkouts': { en: 'Total workouts', ar: 'إجمالي التمارين' },
   'dash.prsSet': { en: 'PRs set', ar: 'أرقام قياسية' },
-  'dash.weightKg': { en: 'Weight (kg)', ar: 'الوزن (كجم)' },
+  'dash.weightKg': { en: 'Weight', ar: 'الوزن' },
   'dash.recentSessions': { en: 'Recent sessions', ar: 'الحصص الأخيرة' },
 
   // ── Today's workout ────────────────────────────────
@@ -115,7 +117,7 @@ export const STRINGS: Record<string, Record<Lang, string>> = {
   'prog.workoutsDone': { en: 'Workouts done', ar: 'تمارين منجزة' },
   'prog.weekStreak': { en: 'Week streak', ar: 'أسابيع متتالية' },
   'prog.totalMinutes': { en: 'Total minutes', ar: 'إجمالي الدقائق' },
-  'prog.weightChange': { en: 'Weight change (kg)', ar: 'تغيّر الوزن (كجم)' },
+  'prog.weightChange': { en: 'Weight change', ar: 'تغيّر الوزن' },
   'prog.workoutsPerWeek': { en: 'Workouts per week', ar: 'التمارين أسبوعيًا' },
   'prog.goalPerWeek': { en: 'Goal: {n} per week', ar: 'الهدف: {n} أسبوعيًا' },
   'prog.bodyWeight': { en: 'Body weight', ar: 'وزن الجسم' },
@@ -124,8 +126,10 @@ export const STRINGS: Record<string, Record<Lang, string>> = {
     ar: 'سجّل وزنك لرؤية التغيّر.',
   },
   'prog.weightLabel': { en: 'Weight', ar: 'الوزن' },
-  'prog.todaysWeight': { en: "Today's weight (kg)", ar: 'وزن اليوم (كجم)' },
+  'prog.todaysWeight': { en: "Today's weight", ar: 'وزن اليوم' },
   'prog.log': { en: 'Log', ar: 'سجّل' },
+  'past.title': { en: 'Log a past day', ar: 'تسجيل يوم سابق' },
+  'past.restDay': { en: 'Rest day — no workout scheduled.', ar: 'يوم راحة — لا يوجد تمرين مجدول.' },
   'prog.personalRecords': { en: 'Personal records', ar: 'الأرقام القياسية' },
   'prog.noRecords': { en: 'No records yet.', ar: 'لا أرقام بعد.' },
   'prog.resetAll': { en: 'Reset all progress', ar: 'إعادة ضبط كل التقدّم' },
@@ -206,8 +210,8 @@ export const STRINGS: Record<string, Record<Lang, string>> = {
   'detail.commonMistakes': { en: 'Common mistakes', ar: 'أخطاء شائعة' },
   'detail.personalRecord': { en: 'Personal record', ar: 'الرقم القياسي' },
   'detail.currentBest': {
-    en: 'Current best: {weight} kg × {reps} reps ({date})',
-    ar: 'أفضل رقم: {weight} كجم × {reps} تكرار ({date})',
+    en: 'Current best: {weight} {unit} × {reps} reps ({date})',
+    ar: 'أفضل رقم: {weight} {unit} × {reps} تكرار ({date})',
   },
   'detail.noRecordYet': {
     en: 'No record logged yet. Set your first one!',

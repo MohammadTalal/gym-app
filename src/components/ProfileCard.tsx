@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Check, LogOut, Pencil, User, Volume2, VolumeX, X } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { useI18n } from '../i18n/LanguageContext';
+import { useUnits } from '../context/UnitsContext';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { SOUND_KEY } from '../utils/sound';
 import type { Difficulty, UserProfile } from '../types';
@@ -11,6 +12,7 @@ const LEVELS: Difficulty[] = ['Beginner', 'Intermediate', 'Advanced'];
 export function ProfileCard() {
   const { state, updateProfile, signOut, mode } = useApp();
   const { t, difficulty } = useI18n();
+  const { unit, setUnit } = useUnits();
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState<UserProfile>(state.profile);
   const [soundOn, setSoundOn] = useLocalStorage<boolean>(SOUND_KEY, true);
@@ -122,6 +124,25 @@ export function ProfileCard() {
         <p className="mt-3 border-t border-slate-100 pt-3 text-sm text-slate-600 dark:border-slate-800 dark:text-slate-300">
           🎯 {p.goal}
         </p>
+      )}
+
+      {!editing && (
+        <div className="mt-3 flex items-center justify-between border-t border-slate-100 pt-3 text-sm dark:border-slate-800">
+          <span className="font-semibold">{t('profile.units')}</span>
+          <div className="flex overflow-hidden rounded-lg border border-slate-200 dark:border-slate-700">
+            {(['kg', 'lb'] as const).map((u) => (
+              <button
+                key={u}
+                onClick={() => setUnit(u)}
+                className={`px-3 py-1 text-xs font-bold ${
+                  unit === u ? 'bg-brand-600 text-white' : 'text-slate-500'
+                }`}
+              >
+                {t(u === 'kg' ? 'common.kg' : 'common.lb')}
+              </button>
+            ))}
+          </div>
+        </div>
       )}
 
       {!editing && (

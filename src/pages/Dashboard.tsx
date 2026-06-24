@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { ArrowRight, Calendar, Dumbbell, Flame, Sparkles, TrendingUp, Trophy } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { useI18n } from '../i18n/LanguageContext';
+import { useUnits } from '../context/UnitsContext';
 import { PageHeader } from '../components/PageHeader';
 import { ProgressRing } from '../components/ProgressRing';
 import { getWorkoutForDate, getNextWorkout, workoutById, TRAINING_DAYS } from '../data/workouts';
@@ -18,6 +19,7 @@ function greetingKey(d: Date): string {
 export function Dashboard() {
   const { state } = useApp();
   const { t, workoutTitle, workoutFocus, prettyDate, dayLabel, dailyTip } = useI18n();
+  const { unit, fmt } = useUnits();
   const today = new Date();
   const earnedCount = ACHIEVEMENTS.filter((a) => a.earned(state)).length;
   const todaysWorkout = getWorkoutForDate(today);
@@ -136,8 +138,8 @@ export function Dashboard() {
           <StatCard icon={<Trophy className="h-5 w-5 text-amber-500" />} value={state.personalRecords.length} label={t('dash.prsSet')} />
           <StatCard
             icon={<TrendingUp className="h-5 w-5 text-emerald-500" />}
-            value={latestWeight ? `${latestWeight}` : '—'}
-            label={t('dash.weightKg')}
+            value={latestWeight != null ? fmt(latestWeight) : '—'}
+            label={`${t('dash.weightKg')} (${t(unit === 'kg' ? 'common.kg' : 'common.lb')})`}
           />
         </div>
 

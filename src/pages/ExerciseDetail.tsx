@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { useI18n } from '../i18n/LanguageContext';
+import { useUnits } from '../context/UnitsContext';
 import { ExerciseThumb } from '../components/ExerciseThumb';
 import { exerciseById } from '../data/exercises';
 import { DIFFICULTY_CHIP, MUSCLE_CHIP } from '../utils/muscleStyle';
@@ -23,6 +24,8 @@ export function ExerciseDetail() {
   const { state, addPersonalRecord } = useApp();
   const i18n = useI18n();
   const { t, muscle, equipment, difficulty, shortDate } = i18n;
+  const { unit, fmt, fromDisplay } = useUnits();
+  const unitLabel = t(unit === 'kg' ? 'common.kg' : 'common.lb');
   const raw = exerciseId ? exerciseById(exerciseId) : undefined;
 
   const [showVideo, setShowVideo] = useState(false);
@@ -49,9 +52,10 @@ export function ExerciseDetail() {
 
   function savePr(e: React.FormEvent) {
     e.preventDefault();
-    const weightKg = parseFloat(prWeight);
+    const entered = parseFloat(prWeight);
     const reps = parseInt(prReps, 10);
-    if (!Number.isFinite(weightKg) || weightKg <= 0 || !Number.isFinite(reps) || reps <= 0) return;
+    if (!Number.isFinite(entered) || entered <= 0 || !Number.isFinite(reps) || reps <= 0) return;
+    const weightKg = Math.round(fromDisplay(entered) * 10) / 10;
     addPersonalRecord({ exerciseId: raw!.id, weightKg, reps, date: dateKey(new Date()) });
     setPrWeight('');
     setPrReps('');
@@ -164,7 +168,7 @@ export function ExerciseDetail() {
           </h2>
           {pr ? (
             <p className="mb-3 text-sm text-slate-600 dark:text-slate-300">
-              {t('detail.currentBest', { weight: pr.weightKg, reps: pr.reps, date: shortDate(pr.date) })}
+              {t('detail.currentBest', { weight: fmt(pr.weightKg), unit: unitLabel, reps: pr.reps, date: shortDate(pr.date) })}
             </p>
           ) : (
             <p className="mb-3 text-sm text-slate-400">{t('detail.noRecordYet')}</p>
@@ -176,7 +180,7 @@ export function ExerciseDetail() {
               step="0.5"
               value={prWeight}
               onChange={(e) => setPrWeight(e.target.value)}
-              placeholder={t('common.kg')}
+              placeholder={unitLabel}
               className="w-20 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm outline-none focus:border-brand-400 dark:border-slate-700 dark:bg-slate-800"
             />
             <input

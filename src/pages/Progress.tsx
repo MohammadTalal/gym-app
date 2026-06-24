@@ -10,27 +10,31 @@ import {
   Tooltip,
   CartesianGrid,
 } from 'recharts';
-import { Activity, Dumbbell, Flame, Plus, Trophy, TrendingDown, RotateCcw } from 'lucide-react';
+import { Activity, Dumbbell, Flame, Plus, Trophy, TrendingDown, RotateCcw, Trash2 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { useI18n } from '../i18n/LanguageContext';
+import { useUnits } from '../context/UnitsContext';
 import { PageHeader } from '../components/PageHeader';
 import { ProfileCard } from '../components/ProfileCard';
+import { PastDayLogger } from '../components/PastDayLogger';
 import { exerciseById } from '../data/exercises';
 import { dateKey, startOfWeek } from '../utils/date';
 import { weekStreak } from '../utils/stats';
 import { TRAINING_DAYS } from '../data/workouts';
 
 export function Progress() {
-  const { state, addBodyWeight, resetProgress } = useApp();
+  const { state, addBodyWeight, removeBodyWeight, removePersonalRecord, resetProgress } = useApp();
   const { t, lang, shortDate, exercise: locExercise } = useI18n();
+  const { unit, toDisplay, fromDisplay, fmt } = useUnits();
+  const unitLabel = t(unit === 'kg' ? 'common.kg' : 'common.lb');
   const [weightInput, setWeightInput] = useState('');
 
   const weightData = useMemo(
     () =>
       [...state.bodyWeight]
         .sort((a, b) => a.date.localeCompare(b.date))
-        .map((b) => ({ date: shortDate(b.date), kg: b.weightKg })),
-    [state.bodyWeight, lang],
+        .map((b) => ({ date: shortDate(b.date), val: Math.round(toDisplay(b.weightKg) * 10) / 10 })),
+    [state.bodyWeight, lang, unit],
   );
 
   // Group completed workouts into the last 6 weeks (Mon-based).
@@ -65,8 +69,9 @@ export function Progress() {
 
   function submitWeight(e: React.FormEvent) {
     e.preventDefault();
-    const kg = parseFloat(weightInput);
-    if (!Number.isFinite(kg) || kg <= 0) return;
+    const entered = parseFloat(weightInput);
+    if (!Number.isFinite(entered) || entered <= 0) return;
+    const kg = fromDisplay(entered);
     addBodyWeight({ date: dateKey(new Date()), weightKg: Math.round(kg * 10) / 10 });
     setWeightInput('');
   }
@@ -86,10 +91,13 @@ export function Progress() {
           <StatCard icon={<Activity className="h-5 w-5 text-emerald-500" />} value={`${stats.totalMinutes}`} label={t('prog.totalMinutes')} />
           <StatCard
             icon={<TrendingDown className="h-5 w-5 text-sky-500" />}
-            value={`${stats.weightDelta > 0 ? '+' : ''}${stats.weightDelta.toFixed(1)}`}
-            label={t('prog.weightChange')}
+            value={`${stats.weightDelta > 0 ? '+' : ''}${(Math.round(toDisplay(stats.weightDelta) * 10) / 10)}`}
+            label={`${t('prog.weightChange')} (${unitLabel})`}
           />
         </div>
+
+        {/* Log a past day */}
+        <PastDayLogger />
 
         {/* Workouts per week */}
         <div className="card p-4">
@@ -122,10 +130,10 @@ export function Progress() {
                   <CartesianGrid strokeDasharray="3 3" className="stroke-slate-200 dark:stroke-slate-800" vertical={false} />
                   <XAxis dataKey="date" reversed={lang === 'ar'} tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
                   <YAxis domain={['dataMin - 1', 'dataMax + 1']} tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
-                  <Tooltip contentStyle={tooltipStyle} labelStyle={{ fontWeight: 700 }} formatter={(v) => [`${v} ${t('common.kg')}`, t('prog.weightLabel')]} />
+                  <Tooltip contentStyle={tooltipStyle} labelStyle={{ fontWeight: 700 }} formatter={(v) => [`${v} ${unitLabel}`, t('prog.weightLabel')]} />
                   <Line
                     type="monotone"
-                    dataKey="kg"
+                    dataKey="val"
                     stroke="#1c84f5"
                     strokeWidth={3}
                     dot={{ r: 3, fill: '#1c84f5' }}
@@ -145,13 +153,37 @@ export function Progress() {
               step="0.1"
               value={weightInput}
               onChange={(e) => setWeightInput(e.target.value)}
-              placeholder={t('prog.todaysWeight')}
+              placeholder={`${t('prog.todaysWeight')} (${unitLabel})`}
               className="flex-1 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm outline-none focus:border-brand-400 dark:border-slate-700 dark:bg-slate-800"
             />
             <button type="submit" className="btn-primary px-4 py-2.5">
               <Plus className="h-4 w-4" /> {t('prog.log')}
             </button>
           </form>
+
+          {/* Recent entries with delete */}
+          {state.bodyWeight.length > 0 && (
+            <div className="mt-3 space-y-1 border-t border-slate-100 pt-3 dark:border-slate-800">
+              {[...state.bodyWeight]
+                .sort((a, b) => b.date.localeCompare(a.date))
+                .slice(0, 5)
+                .map((b) => (
+                  <div key={b.date} className="flex items-center justify-between text-sm">
+                    <span className="text-slate-500 dark:text-slate-400">{shortDate(b.date)}</span>
+                    <span className="flex items-center gap-3">
+                      <span className="font-semibold">{fmt(b.weightKg)} {unitLabel}</span>
+                      <button
+                        onClick={() => removeBodyWeight(b.date)}
+                        aria-label={t('common.delete')}
+                        className="text-slate-300 hover:text-red-500 dark:text-slate-600"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </span>
+                  </div>
+                ))}
+            </div>
+          )}
         </div>
 
         {/* Personal records */}
@@ -168,15 +200,22 @@ export function Progress() {
                 .map((pr) => {
                   const ex = exerciseById(pr.exerciseId);
                   return (
-                    <div key={pr.exerciseId} className="flex items-center justify-between py-2.5">
-                      <div>
-                        <p className="font-semibold leading-tight">{ex ? locExercise(ex).name : pr.exerciseId}</p>
+                    <div key={pr.exerciseId} className="flex items-center justify-between gap-2 py-2.5">
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate font-semibold leading-tight">{ex ? locExercise(ex).name : pr.exerciseId}</p>
                         <p className="text-xs text-slate-400">{shortDate(pr.date)}</p>
                       </div>
                       <p className="text-end font-bold">
-                        {pr.weightKg} {t('common.kg')}
+                        {fmt(pr.weightKg)} {unitLabel}
                         <span className="block text-xs font-normal text-slate-400">× {pr.reps} {t('common.reps')}</span>
                       </p>
+                      <button
+                        onClick={() => removePersonalRecord(pr.exerciseId)}
+                        aria-label={t('common.delete')}
+                        className="shrink-0 text-slate-300 hover:text-red-500 dark:text-slate-600"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
                     </div>
                   );
                 })}
