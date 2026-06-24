@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Check, LogOut, Pencil, User, Volume2, VolumeX, X } from 'lucide-react';
+import { Check, Download, LogOut, Pencil, User, Volume2, VolumeX, X } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { useI18n } from '../i18n/LanguageContext';
 import { useUnits } from '../context/UnitsContext';
@@ -25,6 +25,16 @@ export function ProfileCard() {
   function save() {
     updateProfile({ ...draft, heightCm: Number(draft.heightCm) || 0 });
     setEditing(false);
+  }
+
+  function exportData() {
+    const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `gymcoach-data-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
   }
 
   const p = state.profile;
@@ -165,6 +175,15 @@ export function ProfileCard() {
               }`}
             />
           </span>
+        </button>
+      )}
+
+      {!editing && (
+        <button
+          onClick={exportData}
+          className="mt-3 flex w-full items-center gap-2 border-t border-slate-100 pt-3 text-sm font-semibold dark:border-slate-800"
+        >
+          <Download className="h-4 w-4 text-brand-500" /> {t('profile.export')}
         </button>
       )}
 

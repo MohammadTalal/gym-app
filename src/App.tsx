@@ -2,6 +2,8 @@ import { lazy, Suspense } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import { BottomNav } from './components/BottomNav';
+import { Onboarding, ONBOARDED_KEY } from './components/Onboarding';
+import { useLocalStorage } from './hooks/useLocalStorage';
 import { AuthScreen } from './components/AuthScreen';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { CloudAppProvider } from './context/CloudAppProvider';
@@ -28,6 +30,9 @@ function AppRoutes() {
   const location = useLocation();
   // Workout Mode is full-screen and hides the bottom nav for focus.
   const isWorkoutMode = location.pathname.startsWith('/workout/');
+  const [onboarded, setOnboarded] = useLocalStorage<boolean>(ONBOARDED_KEY, false);
+
+  if (!onboarded) return <Onboarding onDone={() => setOnboarded(true)} />;
 
   return (
     <div className="mx-auto min-h-screen max-w-md bg-slate-50 dark:bg-slate-950">

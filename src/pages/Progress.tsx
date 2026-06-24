@@ -18,7 +18,7 @@ import { PageHeader } from '../components/PageHeader';
 import { ProfileCard } from '../components/ProfileCard';
 import { PastDayLogger } from '../components/PastDayLogger';
 import { exerciseById } from '../data/exercises';
-import { dateKey, startOfWeek } from '../utils/date';
+import { dateKey, parseDateKey, startOfWeek } from '../utils/date';
 import { weekStreak } from '../utils/stats';
 import { TRAINING_DAYS } from '../data/workouts';
 
@@ -48,7 +48,7 @@ export function Progress() {
       buckets.set(key, 0);
     }
     for (const w of state.completedWorkouts) {
-      const key = dateKey(startOfWeek(new Date(w.date)));
+      const key = dateKey(startOfWeek(parseDateKey(w.date)));
       if (buckets.has(key)) buckets.set(key, (buckets.get(key) ?? 0) + 1);
     }
     return [...buckets.entries()].map(([key, count]) => ({

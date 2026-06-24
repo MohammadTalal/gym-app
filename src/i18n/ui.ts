@@ -175,6 +175,13 @@ export const STRINGS: Record<string, Record<Lang, string>> = {
     ar: 'تحقق من بريدك لتأكيد حسابك، ثم سجّل الدخول.',
   },
 
+  // ── Onboarding ─────────────────────────────────────
+  'onb.welcome': { en: 'Welcome to GymCoach', ar: 'مرحبًا بك في مدرّب الجيم' },
+  'onb.subtitle': { en: "Let's set up your profile — you can change this anytime.", ar: 'لنُعدّ ملفك الشخصي — يمكنك تغييره في أي وقت.' },
+  'onb.start': { en: "Let's go", ar: 'لنبدأ' },
+  'onb.skip': { en: 'Skip for now', ar: 'تخطّي الآن' },
+  'onb.yourName': { en: 'Your name', ar: 'اسمك' },
+
   // ── Profile ────────────────────────────────────────
   'profile.edit': { en: 'Edit', ar: 'تعديل' },
   'profile.name': { en: 'Name', ar: 'الاسم' },
@@ -190,6 +197,7 @@ export const STRINGS: Record<string, Record<Lang, string>> = {
   'profile.signOut': { en: 'Sign out', ar: 'تسجيل الخروج' },
   'profile.sound': { en: 'Rest timer sound', ar: 'صوت مؤقّت الراحة' },
   'profile.units': { en: 'Weight units', ar: 'وحدة الوزن' },
+  'profile.export': { en: 'Export my data', ar: 'تصدير بياناتي' },
 
   // ── Exercise detail ────────────────────────────────
   'detail.notFound': { en: 'Exercise not found.', ar: 'التمرين غير موجود.' },

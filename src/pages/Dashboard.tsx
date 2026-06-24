@@ -7,7 +7,7 @@ import { PageHeader } from '../components/PageHeader';
 import { ProgressRing } from '../components/ProgressRing';
 import { getWorkoutForDate, getNextWorkout, workoutById, TRAINING_DAYS } from '../data/workouts';
 import { ACHIEVEMENTS } from '../data/achievements';
-import { dateKey, weekDates } from '../utils/date';
+import { dateKey, parseDateKey, weekDates } from '../utils/date';
 
 function greetingKey(d: Date): string {
   const h = d.getHours();
@@ -194,7 +194,7 @@ export function Dashboard() {
                       </div>
                       <div className="flex-1">
                         <p className="font-semibold leading-tight">{day ? workoutTitle(day) : w.workoutDayId}</p>
-                        <p className="text-xs text-slate-500 dark:text-slate-400">{prettyDate(new Date(w.date))}</p>
+                        <p className="text-xs text-slate-500 dark:text-slate-400">{prettyDate(parseDateKey(w.date))}</p>
                       </div>
                       <div className="text-end text-xs text-slate-500 dark:text-slate-400">
                         <p className="font-bold text-slate-700 dark:text-slate-200">
