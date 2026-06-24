@@ -1,5 +1,6 @@
 import { ThemeToggle } from './ThemeToggle';
 import { LanguageToggle } from './LanguageToggle';
+import { SyncIndicator } from './SyncIndicator';
 
 export function PageHeader({
   title,
@@ -22,6 +23,7 @@ export function PageHeader({
       </div>
       {action ?? (
         <div className="flex shrink-0 items-center gap-1.5">
+          <SyncIndicator />
           <LanguageToggle />
           <ThemeToggle />
         </div>

@@ -8,6 +8,25 @@ html {
   -webkit-tap-highlight-color: transparent;
 }
 
+/* Keyboard focus ring for accessibility (doesn't show on mouse/touch). */
+*:focus-visible {
+  outline: 2px solid #33a3ff;
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* Respect users who prefer reduced motion: disable confetti/float/pulse/etc. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 body {
   @apply bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100;
   /* Respect iOS safe areas (notch / home indicator) */

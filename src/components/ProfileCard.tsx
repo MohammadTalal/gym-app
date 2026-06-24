@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
-import { Check, LogOut, Pencil, User, X } from 'lucide-react';
+import { Check, LogOut, Pencil, User, Volume2, VolumeX, X } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { useI18n } from '../i18n/LanguageContext';
+import { useLocalStorage } from '../hooks/useLocalStorage';
+import { SOUND_KEY } from '../utils/sound';
 import type { Difficulty, UserProfile } from '../types';
 
 const LEVELS: Difficulty[] = ['Beginner', 'Intermediate', 'Advanced'];
@@ -11,6 +13,7 @@ export function ProfileCard() {
   const { t, difficulty } = useI18n();
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState<UserProfile>(state.profile);
+  const [soundOn, setSoundOn] = useLocalStorage<boolean>(SOUND_KEY, true);
 
   // Keep the draft in sync if the profile changes (e.g. after cloud load).
   useEffect(() => {
@@ -119,6 +122,29 @@ export function ProfileCard() {
         <p className="mt-3 border-t border-slate-100 pt-3 text-sm text-slate-600 dark:border-slate-800 dark:text-slate-300">
           🎯 {p.goal}
         </p>
+      )}
+
+      {!editing && (
+        <button
+          onClick={() => setSoundOn((v) => !v)}
+          className="mt-3 flex w-full items-center justify-between border-t border-slate-100 pt-3 text-sm dark:border-slate-800"
+        >
+          <span className="flex items-center gap-2 font-semibold">
+            {soundOn ? <Volume2 className="h-4 w-4 text-brand-500" /> : <VolumeX className="h-4 w-4 text-slate-400" />}
+            {t('profile.sound')}
+          </span>
+          <span
+            className={`relative h-6 w-10 rounded-full transition-colors ${
+              soundOn ? 'bg-brand-500' : 'bg-slate-300 dark:bg-slate-600'
+            }`}
+          >
+            <span
+              className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-all ${
+                soundOn ? 'start-[1.125rem]' : 'start-0.5'
+              }`}
+            />
+          </span>
+        </button>
       )}
 
       {mode === 'cloud' && signOut && (

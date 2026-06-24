@@ -21,7 +21,9 @@ import { exerciseById } from '../data/exercises';
 import { MUSCLE_CHIP } from '../utils/muscleStyle';
 import { dateKey, formatRest } from '../utils/date';
 import { haptics } from '../utils/haptics';
+import { playChime, SOUND_KEY } from '../utils/sound';
 import { useCountUp } from '../hooks/useCountUp';
+import { useLocalStorage } from '../hooks/useLocalStorage';
 
 export function WorkoutMode() {
   const { workoutId } = useParams<{ workoutId: string }>();
@@ -29,6 +31,9 @@ export function WorkoutMode() {
   const { toggleExerciseComplete, isExerciseComplete, logWorkout } = useApp();
   const i18n = useI18n();
   const { t, muscle, reps: locReps } = i18n;
+  const [soundOn] = useLocalStorage<boolean>(SOUND_KEY, true);
+  const soundRef = useRef(soundOn);
+  soundRef.current = soundOn;
 
   const workout = workoutId ? workoutById(workoutId) : undefined;
 
@@ -48,7 +53,10 @@ export function WorkoutMode() {
     const t = setInterval(() => {
       setRestLeft((s) => {
         const next = Math.max(0, s - 1);
-        if (next === 0) haptics.restOver();
+        if (next === 0) {
+          haptics.restOver();
+          if (soundRef.current) playChime();
+        }
         return next;
       });
     }, 1000);

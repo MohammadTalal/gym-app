@@ -109,6 +109,11 @@ export function LocalAppProvider({ children }: { children: ReactNode }) {
     [setState],
   );
 
+  const removeBodyWeight = useCallback(
+    (date: string) => setState((s) => ({ ...s, bodyWeight: s.bodyWeight.filter((b) => b.date !== date) })),
+    [setState],
+  );
+
   const addPersonalRecord = useCallback(
     (entry: PersonalRecord) => {
       setState((s) => {
@@ -116,6 +121,12 @@ export function LocalAppProvider({ children }: { children: ReactNode }) {
         return { ...s, personalRecords: [...filtered, entry] };
       });
     },
+    [setState],
+  );
+
+  const removePersonalRecord = useCallback(
+    (exerciseId: string) =>
+      setState((s) => ({ ...s, personalRecords: s.personalRecords.filter((p) => p.exerciseId !== exerciseId) })),
     [setState],
   );
 
@@ -135,7 +146,9 @@ export function LocalAppProvider({ children }: { children: ReactNode }) {
       completedExerciseIds,
       logWorkout,
       addBodyWeight,
+      removeBodyWeight,
       addPersonalRecord,
+      removePersonalRecord,
       updateProfile,
       resetProgress: reset,
     }),
@@ -148,7 +161,9 @@ export function LocalAppProvider({ children }: { children: ReactNode }) {
       completedExerciseIds,
       logWorkout,
       addBodyWeight,
+      removeBodyWeight,
       addPersonalRecord,
+      removePersonalRecord,
       updateProfile,
       reset,
     ],

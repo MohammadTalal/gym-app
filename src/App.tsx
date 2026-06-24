@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import { BottomNav } from './components/BottomNav';
@@ -9,9 +10,19 @@ import { isSupabaseConfigured } from './lib/supabase';
 import { Dashboard } from './pages/Dashboard';
 import { TodayWorkout } from './pages/TodayWorkout';
 import { WorkoutMode } from './pages/WorkoutMode';
-import { Progress } from './pages/Progress';
 import { Library } from './pages/Library';
 import { ExerciseDetail } from './pages/ExerciseDetail';
+
+// Code-split the charts-heavy Progress page so the app opens faster.
+const Progress = lazy(() => import('./pages/Progress').then((m) => ({ default: m.Progress })));
+
+function PageFallback() {
+  return (
+    <div className="flex min-h-[60vh] items-center justify-center">
+      <Loader2 className="h-7 w-7 animate-spin text-brand-500" />
+    </div>
+  );
+}
 
 function AppRoutes() {
   const location = useLocation();
@@ -21,14 +32,16 @@ function AppRoutes() {
   return (
     <div className="mx-auto min-h-screen max-w-md bg-slate-50 dark:bg-slate-950">
       <main className={isWorkoutMode ? '' : 'pb-24'}>
-        <Routes>
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/today" element={<TodayWorkout />} />
-          <Route path="/workout/:workoutId" element={<WorkoutMode />} />
-          <Route path="/progress" element={<Progress />} />
-          <Route path="/library" element={<Library />} />
-          <Route path="/library/:exerciseId" element={<ExerciseDetail />} />
-        </Routes>
+        <Suspense fallback={<PageFallback />}>
+          <Routes>
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/today" element={<TodayWorkout />} />
+            <Route path="/workout/:workoutId" element={<WorkoutMode />} />
+            <Route path="/progress" element={<Progress />} />
+            <Route path="/library" element={<Library />} />
+            <Route path="/library/:exerciseId" element={<ExerciseDetail />} />
+          </Routes>
+        </Suspense>
       </main>
       {!isWorkoutMode && <BottomNav />}
     </div>

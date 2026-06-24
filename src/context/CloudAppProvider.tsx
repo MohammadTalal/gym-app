@@ -14,7 +14,7 @@ import { DEFAULT_PROFILE, STARTING_WEIGHT_KG } from '../data/sampleData';
 import { dateKey } from '../utils/date';
 import { reconcileLogs, scheduledWorkoutForKey, syncDayLog } from '../utils/session';
 import { AppContext } from './AppContext';
-import type { AppContextValue } from './AppContext';
+import type { AppContextValue, SyncStatus } from './AppContext';
 
 /** Map a CompletedWorkout to its Supabase row shape. */
 function workoutRow(userId: string, w: CompletedWorkout) {
@@ -124,11 +124,32 @@ export function CloudAppProvider({ children }: { children: ReactNode }) {
     document.documentElement.classList.toggle('dark', state.darkMode);
   }, [state?.darkMode]);
 
+  // ── Save-status tracking ────────────────────────────
+  const [syncStatus, setSyncStatus] = useState<SyncStatus>('idle');
+  const savedTimer = useRef<ReturnType<typeof setTimeout>>();
+
+  /** Fire a Supabase write and reflect its outcome in the save indicator. */
+  const mutate = useCallback((p: PromiseLike<{ error: unknown }>) => {
+    setSyncStatus('saving');
+    Promise.resolve(p).then(
+      (res) => {
+        if (res?.error) {
+          setSyncStatus('error');
+          return;
+        }
+        setSyncStatus('saved');
+        clearTimeout(savedTimer.current);
+        savedTimer.current = setTimeout(() => setSyncStatus('idle'), 1500);
+      },
+      () => setSyncStatus('error'),
+    );
+  }, []);
+
   const toggleDarkMode = useCallback(() => {
     setState((s) => (s ? { ...s, darkMode: !s.darkMode } : s));
     const next = !stateRef.current?.darkMode;
-    void supabase!.from('profiles').update({ dark_mode: next }).eq('user_id', userId);
-  }, [userId]);
+    mutate(supabase!.from('profiles').update({ dark_mode: next }).eq('user_id', userId));
+  }, [userId, mutate]);
 
   const completedExerciseIds = useCallback(
     (date: Date = new Date()) => stateRef.current?.completionByDate[dateKey(date)] ?? [],
@@ -158,14 +179,16 @@ export function CloudAppProvider({ children }: { children: ReactNode }) {
 
       // Persist the exercise tick.
       if (currentlyDone) {
-        void supabase!
-          .from('exercise_completions')
-          .delete()
-          .match({ user_id: userId, date: key, exercise_id: exerciseId });
+        mutate(
+          supabase!
+            .from('exercise_completions')
+            .delete()
+            .match({ user_id: userId, date: key, exercise_id: exerciseId }),
+        );
       } else {
-        void supabase!
-          .from('exercise_completions')
-          .insert({ user_id: userId, date: key, exercise_id: exerciseId });
+        mutate(
+          supabase!.from('exercise_completions').insert({ user_id: userId, date: key, exercise_id: exerciseId }),
+        );
       }
 
       // Persist the auto-derived "trained" log for that day.
@@ -173,18 +196,22 @@ export function CloudAppProvider({ children }: { children: ReactNode }) {
       if (workout) {
         const entry = completedWorkouts.find((w) => w.date === key && w.workoutDayId === workout.id);
         if (entry) {
-          void supabase!
-            .from('completed_workouts')
-            .upsert(workoutRow(userId, entry), { onConflict: 'user_id,workout_day_id,date' });
+          mutate(
+            supabase!
+              .from('completed_workouts')
+              .upsert(workoutRow(userId, entry), { onConflict: 'user_id,workout_day_id,date' }),
+          );
         } else {
-          void supabase!
-            .from('completed_workouts')
-            .delete()
-            .match({ user_id: userId, date: key, workout_day_id: workout.id });
+          mutate(
+            supabase!
+              .from('completed_workouts')
+              .delete()
+              .match({ user_id: userId, date: key, workout_day_id: workout.id }),
+          );
         }
       }
     },
-    [userId],
+    [userId, mutate],
   );
 
   const setDayCompletion = useCallback(
@@ -203,19 +230,21 @@ export function CloudAppProvider({ children }: { children: ReactNode }) {
 
       // Persist the exercise ticks in bulk.
       if (complete) {
-        void supabase!
-          .from('exercise_completions')
-          .upsert(
+        mutate(
+          supabase!.from('exercise_completions').upsert(
             exerciseIds.map((id) => ({ user_id: userId, date: key, exercise_id: id })),
             { onConflict: 'user_id,date,exercise_id' },
-          );
+          ),
+        );
       } else {
-        void supabase!
-          .from('exercise_completions')
-          .delete()
-          .eq('user_id', userId)
-          .eq('date', key)
-          .in('exercise_id', exerciseIds);
+        mutate(
+          supabase!
+            .from('exercise_completions')
+            .delete()
+            .eq('user_id', userId)
+            .eq('date', key)
+            .in('exercise_id', exerciseIds),
+        );
       }
 
       // Persist the day's trained log.
@@ -223,18 +252,22 @@ export function CloudAppProvider({ children }: { children: ReactNode }) {
       if (workout) {
         const entry = completedWorkouts.find((w) => w.date === key && w.workoutDayId === workout.id);
         if (entry) {
-          void supabase!
-            .from('completed_workouts')
-            .upsert(workoutRow(userId, entry), { onConflict: 'user_id,workout_day_id,date' });
+          mutate(
+            supabase!
+              .from('completed_workouts')
+              .upsert(workoutRow(userId, entry), { onConflict: 'user_id,workout_day_id,date' }),
+          );
         } else {
-          void supabase!
-            .from('completed_workouts')
-            .delete()
-            .match({ user_id: userId, date: key, workout_day_id: workout.id });
+          mutate(
+            supabase!
+              .from('completed_workouts')
+              .delete()
+              .match({ user_id: userId, date: key, workout_day_id: workout.id }),
+          );
         }
       }
     },
-    [userId],
+    [userId, mutate],
   );
 
   const logWorkout = useCallback(
@@ -249,19 +282,21 @@ export function CloudAppProvider({ children }: { children: ReactNode }) {
           completedWorkouts: [...filtered, { ...entry, id: `${entry.workoutDayId}-${entry.date}` }],
         };
       });
-      void supabase!.from('completed_workouts').upsert(
-        {
-          user_id: userId,
-          workout_day_id: entry.workoutDayId,
-          date: entry.date,
-          duration_minutes: entry.durationMinutes,
-          completed_exercises: entry.completedExercises,
-          total_exercises: entry.totalExercises,
-        },
-        { onConflict: 'user_id,workout_day_id,date' },
+      mutate(
+        supabase!.from('completed_workouts').upsert(
+          {
+            user_id: userId,
+            workout_day_id: entry.workoutDayId,
+            date: entry.date,
+            duration_minutes: entry.durationMinutes,
+            completed_exercises: entry.completedExercises,
+            total_exercises: entry.totalExercises,
+          },
+          { onConflict: 'user_id,workout_day_id,date' },
+        ),
       );
     },
-    [userId],
+    [userId, mutate],
   );
 
   const addBodyWeight = useCallback(
@@ -274,11 +309,21 @@ export function CloudAppProvider({ children }: { children: ReactNode }) {
           bodyWeight: [...filtered, entry].sort((a, b) => a.date.localeCompare(b.date)),
         };
       });
-      void supabase!
-        .from('body_weight')
-        .upsert({ user_id: userId, date: entry.date, weight_kg: entry.weightKg }, { onConflict: 'user_id,date' });
+      mutate(
+        supabase!
+          .from('body_weight')
+          .upsert({ user_id: userId, date: entry.date, weight_kg: entry.weightKg }, { onConflict: 'user_id,date' }),
+      );
     },
-    [userId],
+    [userId, mutate],
+  );
+
+  const removeBodyWeight = useCallback(
+    (date: string) => {
+      setState((s) => (s ? { ...s, bodyWeight: s.bodyWeight.filter((b) => b.date !== date) } : s));
+      mutate(supabase!.from('body_weight').delete().match({ user_id: userId, date }));
+    },
+    [userId, mutate],
   );
 
   const addPersonalRecord = useCallback(
@@ -288,32 +333,49 @@ export function CloudAppProvider({ children }: { children: ReactNode }) {
         const filtered = s.personalRecords.filter((p) => p.exerciseId !== entry.exerciseId);
         return { ...s, personalRecords: [...filtered, entry] };
       });
-      void supabase!.from('personal_records').upsert(
-        {
-          user_id: userId,
-          exercise_id: entry.exerciseId,
-          weight_kg: entry.weightKg,
-          reps: entry.reps,
-          date: entry.date,
-        },
-        { onConflict: 'user_id,exercise_id' },
+      mutate(
+        supabase!.from('personal_records').upsert(
+          {
+            user_id: userId,
+            exercise_id: entry.exerciseId,
+            weight_kg: entry.weightKg,
+            reps: entry.reps,
+            date: entry.date,
+          },
+          { onConflict: 'user_id,exercise_id' },
+        ),
       );
     },
-    [userId],
+    [userId, mutate],
+  );
+
+  const removePersonalRecord = useCallback(
+    (exerciseId: string) => {
+      setState((s) =>
+        s ? { ...s, personalRecords: s.personalRecords.filter((p) => p.exerciseId !== exerciseId) } : s,
+      );
+      mutate(supabase!.from('personal_records').delete().match({ user_id: userId, exercise_id: exerciseId }));
+    },
+    [userId, mutate],
   );
 
   const updateProfile = useCallback(
     (profile: UserProfile) => {
       setState((s) => (s ? { ...s, profile } : s));
-      void supabase!.from('profiles').update({
-        name: profile.name,
-        sex: profile.sex,
-        height_cm: profile.heightCm,
-        level: profile.level,
-        goal: profile.goal,
-      }).eq('user_id', userId);
+      mutate(
+        supabase!
+          .from('profiles')
+          .update({
+            name: profile.name,
+            sex: profile.sex,
+            height_cm: profile.heightCm,
+            level: profile.level,
+            goal: profile.goal,
+          })
+          .eq('user_id', userId),
+      );
     },
-    [userId],
+    [userId, mutate],
   );
 
   const resetProgress = useCallback(() => {
@@ -321,11 +383,11 @@ export function CloudAppProvider({ children }: { children: ReactNode }) {
       s ? { ...s, completionByDate: {}, completedWorkouts: [], bodyWeight: [], personalRecords: [] } : s,
     );
     const sb = supabase!;
-    void sb.from('completed_workouts').delete().eq('user_id', userId);
-    void sb.from('body_weight').delete().eq('user_id', userId);
-    void sb.from('personal_records').delete().eq('user_id', userId);
-    void sb.from('exercise_completions').delete().eq('user_id', userId);
-  }, [userId]);
+    mutate(sb.from('completed_workouts').delete().eq('user_id', userId));
+    mutate(sb.from('body_weight').delete().eq('user_id', userId));
+    mutate(sb.from('personal_records').delete().eq('user_id', userId));
+    mutate(sb.from('exercise_completions').delete().eq('user_id', userId));
+  }, [userId, mutate]);
 
   const signOut = useCallback(async () => {
     await supabase!.auth.signOut();
@@ -336,6 +398,7 @@ export function CloudAppProvider({ children }: { children: ReactNode }) {
     return {
       state,
       mode: 'cloud',
+      syncStatus,
       toggleDarkMode,
       toggleExerciseComplete,
       setDayCompletion,
@@ -343,13 +406,16 @@ export function CloudAppProvider({ children }: { children: ReactNode }) {
       completedExerciseIds,
       logWorkout,
       addBodyWeight,
+      removeBodyWeight,
       addPersonalRecord,
+      removePersonalRecord,
       updateProfile,
       resetProgress,
       signOut,
     };
   }, [
     state,
+    syncStatus,
     toggleDarkMode,
     toggleExerciseComplete,
     setDayCompletion,
@@ -357,7 +423,9 @@ export function CloudAppProvider({ children }: { children: ReactNode }) {
     completedExerciseIds,
     logWorkout,
     addBodyWeight,
+    removeBodyWeight,
     addPersonalRecord,
+    removePersonalRecord,
     updateProfile,
     resetProgress,
     signOut,

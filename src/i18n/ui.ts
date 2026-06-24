@@ -28,6 +28,11 @@ export const STRINGS: Record<string, Record<Lang, string>> = {
   'toggle.theme': { en: 'Toggle dark mode', ar: 'تبديل الوضع الداكن' },
   'toggle.lang': { en: 'Switch language', ar: 'تغيير اللغة' },
 
+  // ── Sync status ────────────────────────────────────
+  'sync.saving': { en: 'Saving…', ar: 'جارٍ الحفظ…' },
+  'sync.saved': { en: 'Saved', ar: 'تم الحفظ' },
+  'sync.error': { en: 'Not saved — check connection', ar: 'لم يُحفظ — تحقّق من الاتصال' },
+
   // ── Dashboard ──────────────────────────────────────
   'greeting.morning': { en: 'Good morning', ar: 'صباح الخير' },
   'greeting.afternoon': { en: 'Good afternoon', ar: 'مساء الخير' },
@@ -177,6 +182,8 @@ export const STRINGS: Record<string, Record<Lang, string>> = {
   'profile.save': { en: 'Save', ar: 'حفظ' },
   'profile.cancel': { en: 'Cancel', ar: 'إلغاء' },
   'profile.signOut': { en: 'Sign out', ar: 'تسجيل الخروج' },
+  'profile.sound': { en: 'Rest timer sound', ar: 'صوت مؤقّت الراحة' },
+  'profile.units': { en: 'Weight units', ar: 'وحدة الوزن' },
 
   // ── Exercise detail ────────────────────────────────
   'detail.notFound': { en: 'Exercise not found.', ar: 'التمرين غير موجود.' },

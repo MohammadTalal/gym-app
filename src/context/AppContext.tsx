@@ -7,10 +7,14 @@ import type {
   UserProfile,
 } from '../types';
 
+export type SyncStatus = 'idle' | 'saving' | 'saved' | 'error';
+
 export interface AppContextValue {
   state: AppState;
   /** 'cloud' when backed by Supabase, 'local' when using browser storage only. */
   mode: 'cloud' | 'local';
+  /** Cloud write status for the save indicator (undefined in local mode). */
+  syncStatus?: SyncStatus;
   toggleDarkMode: () => void;
   /** Toggle a single exercise's completed state for a given date (default today). */
   toggleExerciseComplete: (exerciseId: string, date?: Date) => void;
@@ -21,7 +25,9 @@ export interface AppContextValue {
   /** Save a finished workout into history. */
   logWorkout: (entry: Omit<CompletedWorkout, 'id'>) => void;
   addBodyWeight: (entry: BodyWeightEntry) => void;
+  removeBodyWeight: (date: string) => void;
   addPersonalRecord: (entry: PersonalRecord) => void;
+  removePersonalRecord: (exerciseId: string) => void;
   /** Update the personal profile (name, height, goal, …). */
   updateProfile: (profile: UserProfile) => void;
   resetProgress: () => void;

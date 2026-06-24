@@ -96,6 +96,7 @@ export function ExerciseDetail() {
                 className="h-full w-full"
                 src={`https://www.youtube.com/embed/${exercise.videoId}?rel=0`}
                 title={`${exercise.name} video`}
+                loading="lazy"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
               />
